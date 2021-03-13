@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>arkMainWindow</class>
+ <widget class="QMainWindow" name="arkMainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>387</width>
+    <height>176</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Arknights-Sora - zsppp</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QWidget" name="formLayoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>0</y>
+      <width>371</width>
+      <height>121</height>
+     </rect>
+    </property>
+    <layout class="QFormLayout" name="LAYOUT_MAINWINDOW">
+     <item row="0" column="0">
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <layout class="QHBoxLayout" name="LAYOUT_INFO_BATTLECOUNT">
+         <item>
+          <widget class="QCheckBox" name="CB_BATTLECOUNT">
+           <property name="statusTip">
+            <string>完成数次行动后终止</string>
+           </property>
+           <property name="text">
+            <string>预定行动次数</string>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+           <property name="checked">
+            <bool>false</bool>
+           </property>
+           <property name="tristate">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSpinBox" name="TXT_BATTLECOUNT">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="statusTip">
+            <string>预定行动次数</string>
+           </property>
+           <property name="value">
+            <number>0</number>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="LAYOUT_INFO_SANITYCOUNT">
+         <item>
+          <widget class="QLabel" name="label">
+           <property name="statusTip">
+            <string>不足以行动时，补充理智</string>
+           </property>
+           <property name="text">
+            <string>理智液数量</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSpinBox" name="TXT_SANITYCOUNT">
+           <property name="statusTip">
+            <string>预定要喝的理智液数量</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="CB_MUSIC">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="mouseTracking">
+          <bool>true</bool>
+         </property>
+         <property name="acceptDrops">
+          <bool>false</bool>
+         </property>
+         <property name="statusTip">
+          <string>达成目标行动次数或理智清空完成，播放结束音乐</string>
+         </property>
+         <property name="text">
+          <string>结束音乐</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="0" column="1">
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="QPushButton" name="BIN_START">
+         <property name="statusTip">
+          <string>在‘’开始行动“界面点击Start按钮</string>
+         </property>
+         <property name="text">
+          <string>Start</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="BIN_STOP">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="statusTip">
+          <string>停止脚本</string>
+         </property>
+         <property name="text">
+          <string>Stop</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="BTN_GETDEVICE">
+         <property name="statusTip">
+          <string>更换安卓设备</string>
+         </property>
+         <property name="text">
+          <string>ChangeDevice</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>387</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="MENU_FILE_PWSHERE"/>
+   </widget>
+   <widget class="QMenu" name="menuabout">
+    <property name="title">
+     <string>About</string>
+    </property>
+    <addaction name="MENU_ABOUT_ABOUT"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuabout"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="MENU_FILE_PWSHERE">
+   <property name="text">
+    <string>PowerShell</string>
+   </property>
+  </action>
+  <action name="MENU_ABOUT_ABOUT">
+   <property name="text">
+    <string>about</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>MENU_FILE_PWSHERE</sender>
+   <signal>triggered()</signal>
+   <receiver>arkMainWindow</receiver>
+   <slot>pwsHere()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>185</x>
+     <y>111</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>BIN_START</sender>
+   <signal>clicked()</signal>
+   <receiver>arkMainWindow</receiver>
+   <slot>runMain()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>285</x>
+     <y>41</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>198</x>
+     <y>115</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>BIN_STOP</sender>
+   <signal>clicked()</signal>
+   <receiver>arkMainWindow</receiver>
+   <slot>stop()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>378</x>
+     <y>90</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>198</x>
+     <y>115</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>BTN_GETDEVICE</sender>
+   <signal>clicked()</signal>
+   <receiver>arkMainWindow</receiver>
+   <slot>getDevice()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>270</x>
+     <y>111</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>193</x>
+     <y>107</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>MENU_ABOUT_ABOUT</sender>
+   <signal>triggered()</signal>
+   <receiver>arkMainWindow</receiver>
+   <slot>about()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>193</x>
+     <y>107</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>pwsHere()</slot>
+  <slot>test_click()</slot>
+  <slot>getDevice()</slot>
+  <slot>adbConnect()</slot>
+  <slot>runMain()</slot>
+  <slot>stop()</slot>
+  <slot>about()</slot>
+ </slots>
+</ui>
