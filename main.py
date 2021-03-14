@@ -4,9 +4,8 @@ import logging,os,sys,threading,time
 import airtest
 from airtest.core.android.adb import ADB
 #Qt，界面依赖模块
-#from PyQt5.QtCore import QRegExp,Qt,pyqtSignal
-#from PyQt5.QtGui import QRegExpValidator
 import PyQt5
+from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt,pyqtSignal,QUrl
 from PyQt5.QtWidgets import QApplication,QMainWindow,QInputDialog,QMessageBox
 #music
@@ -98,6 +97,8 @@ class MyMainWindow(QMainWindow):
     <td><a href="https://github.com/zsppp/Arknights-Sora">https://github.com/zsppp/Arknights-Sora</a></td>
   </tr>
 </table>
+<br>
+<br>
 ''')
 
 
@@ -105,5 +106,6 @@ if __name__=='__main__':
     #QWidget: Must construct a QApplication before a QWidget 使用Qt库前需要调用QApplication
     app=QApplication(sys.argv)
     myWin=MyMainWindow()
+    myWin.setWindowIcon(QIcon("image/gui/Sora.ico"))
     myWin.show()
     sys.exit(app.exec_())

@@ -1,6 +1,6 @@
 'Arknights-Sora'
 __author__='zsppp'
-__version__='v1.0.0'
+__version__='v1.0.1'
 #python系统基础模块
 import logging,os,sys,threading,time,operator,builtins
 #连接安卓设备，点击等操作
@@ -40,7 +40,6 @@ class Base(Android):
                 ' ':(1846,1030),#右下角
                 'B':(1650,750),#开始战斗
                 'Y':(1634,866),#喝理智液
-                'N':(1169,864),#不喝理智液
                 }.items()}
     def press(self,c):
         logger.debug(f'press {c}')
@@ -53,6 +52,7 @@ IMG_BATTLEPREPARE=cv2.imread('image/battleprepare.png')
 IMG_BATTLEBEGIN=cv2.imread('image/battlebegin.png')
 IMG_BATTLECONTINUE=cv2.imread('image/battlecontinue.png')
 IMG_SANITYEMPTY=cv2.imread('image/sanityempty.png')
+IMG_SANITYDRUG=cv2.imread('image/sanitydrug.png')
 check=None
 class Check:
     def __init__(self,forwordLagency=.01,backwordLagency=0):
@@ -73,10 +73,25 @@ class Check:
         return threshold>value
     def isBattlePrepare(self):return self.compare(IMG_BATTLEPREPARE,"IMG_BATTLEPREPARE",(1670,960,1850,1010))
     def isBattleBegin(self):return self.compare(IMG_BATTLEBEGIN,"IMG_BATTLEBEGIN",(1553,701,1758,900))
-    def isBattleContinue(self):return self.compare(IMG_BATTLECONTINUE,"IMG_BATTLECONTINUE",(890,175,1030,225),.2)
-    def isSanityEmpty(self):return self.compare(IMG_SANITYEMPTY,"IMG_SANITYEMPTY",(1044,127,1108,184))
+    def isBattleContinue(self):return self.compare(IMG_BATTLECONTINUE,"NOT_PRINT",(890,175,1030,225),.2)
+    def isSanityEmpty(self):return self.compare(IMG_SANITYEMPTY,"IMG_SANITYEMPTY",(205,455,340,540),.2)
+    def isSanityDrug(self):return self.compare(IMG_SANITYDRUG,"IMG_SANITYDRUG",(1044,127,1108,184))
 
 def main(battleCount=-1,sanityCount=0):
+    def drinkSanity():
+        nonlocal sanity,sanityCount
+        if sanity<sanityCount:
+            if check.isSanityDrug():
+                sanity+=1
+                logger.info(f'Drink Sanity {sanity}/{sanityCount}')
+                base.press("Y")
+                while True:
+                    if Check(.5,.5).isBattlePrepare():break
+                return True
+            else:
+                logger.info(f'Sanity {sanity}/{sanityCount},lack {sanityCount-sanity}. Sanity Drug is not enough!!!')
+                return False
+
     battleCountInfo='infinite'
     if battleCount > 0:battleCountInfo=battleCount
     logger.info('-----arkFunc-----')
@@ -84,40 +99,37 @@ def main(battleCount=-1,sanityCount=0):
     logger.info('-----------------')
     battle,sanity=0,0
     while True:
-        #战斗前后逻辑
+        #行动前后逻辑
         while True:
             Check(.8,.2)
             if check.isBattleContinue():break
             elif check.isSanityEmpty():
-                if sanity<sanityCount:
-                    sanity+=1
-                    logger.info(f'Drink Sanity {sanity}/{sanityCount}')
-                    base.press("Y")
-                    while True:
-                        if not Check(.5,.5).isSanityEmpty():break
-                else:
+                if not drinkSanity():
                     logger.info("---Sanity Empty")
-                    base.press("N")
+                    base.press(" ")
                     return
             elif check.isBattlePrepare():
-                if battleCount and battle==battleCount:
-                    logger.info("---Battle Complete")
-                    return
                 base.press(" ")
             elif check.isBattleBegin():
                 base.press("B")
                 break
             else:base.press(" ")
             logger.debug(" ")
+        #开始行动
         battle+=1
         logger.info(f'---Battle Start {battle}')
-        #持续判断战斗进行
+        #持续判断行动进行
         while True:
             if Check(.5,.5).isBattleContinue():break
         logger.info('Battle Continue...')
         while True:
             if not Check(.5,3).isBattleContinue():break
-        if battleCount>0:logger.info(f'Battle Finished {battle}/{battleCount}')
+        if battleCount>0:
+            logger.info(f'Battle Finished {battle}/{battleCount}')
+            if battle>=battleCount:
+                logger.info("---Battle Complete")
+                base.press(" ")
+                return
         else:logger.info('Battle Finished')
         
 
