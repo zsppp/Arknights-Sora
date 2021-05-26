@@ -15,13 +15,17 @@ import arkFunc
 #Qt Designer设计界面，使用命令由ui转换成py文件，eg: pyuic5 xx.ui -o xx.py
 from arkMainWindow import Ui_arkMainWindow
 
-logger=logging.getLogger('ark.Gui')
+logger=logging.getLogger('arknights.Gui')
 endMusic='music/end.mp3'
+
+#QWidget: Must construct a QApplication before a QWidget 使用Qt库前需要调用QApplication
+app=QApplication(sys.argv)
 
 class MyMainWindow(QMainWindow):
     signalFuncBegin=pyqtSignal()
     signalFuncEnd=pyqtSignal()
     def __init__(self,parent=None):
+        logger.info('正在启动...')
         super().__init__(parent)
         self.ui=Ui_arkMainWindow()
         self.ui.setupUi(self)
@@ -32,22 +36,26 @@ class MyMainWindow(QMainWindow):
         self.player = QMediaPlayer()
         self.player.setMedia(QMediaContent(QUrl.fromLocalFile(endMusic)))
         self.player.setVolume(15)
+        logger.info('OK!')
     def funcBegin(self):
         self.ui.BIN_START.setEnabled(False)
         self.ui.TXT_BATTLECOUNT.setEnabled(False)
         self.ui.TXT_SANITYCOUNT.setEnabled(False)
-        self.ui.CB_BATTLECOUNT.setEnabled(False)
         self.ui.BIN_STOP.setEnabled(True)
     def funcEnd(self):
         self.ui.BIN_START.setEnabled(True)
         self.ui.TXT_BATTLECOUNT.setEnabled(True)
         self.ui.TXT_SANITYCOUNT.setEnabled(True)
-        self.ui.CB_BATTLECOUNT.setEnabled(True)
         self.ui.BIN_STOP.setEnabled(False)
+        if arkFunc.terminateFlag:
+            logger.info('程序终止...')
         #播放结束音乐
         if self.ui.CB_MUSIC.isChecked() and not arkFunc.terminateFlag: 
             self.player.play()
             logger.info('end music~')
+        self.ui.TXT_BATTLECOUNT.setValue(0)
+        self.ui.TXT_SANITYCOUNT.setValue(0)
+        app.alert(self, 0)
     #获取adb devices
     def getDevice(self):
         text,ok=(lambda adbList:QInputDialog.getItem(self,'选取设备','在下拉列表中选择一个设备',adbList,adbList.index(arkFunc.base.serialno)if arkFunc.base.serialno and arkFunc.base.serialno in adbList else 0,True,Qt.WindowStaysOnTopHint))([i for i,j in ADB().devices()if j=='device'])
@@ -67,15 +75,17 @@ class MyMainWindow(QMainWindow):
     def runMain(self):
         if not arkFunc.base.serialno:return QMessageBox.critical(self,'错误','未连接设备')
         battleCount=-1
-        if self.ui.CB_BATTLECOUNT.isChecked():
-            if self.ui.TXT_BATTLECOUNT.value()>0:battleCount=self.ui.TXT_BATTLECOUNT.value()
-            else:return QMessageBox.warning(self,'提示','已勾选预定行动次数，未修改数字')
+        if self.ui.TXT_BATTLECOUNT.value()>0:
+            battleCount=self.ui.TXT_BATTLECOUNT.value()
         def f():
             try:
                 self.signalFuncBegin.emit()
                 arkFunc.suspendFlag=False
                 arkFunc.terminateFlag=False
-                arkFunc.main(battleCount, self.ui.TXT_SANITYCOUNT.value())
+                #任务清单
+                arkFunc.Battle(battleCount, self.ui.TXT_SANITYCOUNT.value())
+                arkFunc.DailyWork()
+                #arkFunc.Test()
             finally:
                 self.signalFuncEnd.emit()
         self.thread=threading.Thread(target=f,name='arkFunc')
@@ -103,8 +113,6 @@ class MyMainWindow(QMainWindow):
 
 
 if __name__=='__main__':
-    #QWidget: Must construct a QApplication before a QWidget 使用Qt库前需要调用QApplication
-    app=QApplication(sys.argv)
     myWin=MyMainWindow()
     myWin.setWindowIcon(QIcon("image/gui/Sora.ico"))
     myWin.show()

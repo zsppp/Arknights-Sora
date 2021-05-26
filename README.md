@@ -8,6 +8,10 @@
 GitHub项目地址:[https://github.com/zsppp/Arknights-Sora](https://github.com/zsppp/Arknights-Sora)  
 适用于明日方舟简体中文安卓版本,运行在包含Python3.7或更高版本的Windows上  
 
+Gitee平台包含pyinstaller打包的可执行软件包  
+Gitee项目地址:[https://gitee.com/zsppp/Arknights-Sora/releases](https://gitee.com/zsppp/Arknights-Sora/releases)  
+
+
 # 警告 Warning
 ***
 [鹰角网络游戏使用许可及服务协议](https://www.hypergryph.com/service)第6条规定:  
@@ -37,20 +41,36 @@ GitHub项目地址:[https://github.com/zsppp/Arknights-Sora](https://github.com/
 **由于使用本脚本(Arknights-Sora)而导致的包括但不限于上述各项的损失本人概不负责,您下载并使用该脚本即代表您已知晓使用脚本可能带来的风险并愿意承担可能出现的后果**   
 ***
 
-# 使用说明 Instruction
-双击运行main.py  
-进入需要连续行动的关卡，在开始行动界面点击Arknights-Sora"start"按钮  
-
-注： 
-1，仅适用于支持adb调试的安卓模拟器 
-2，adb连接手机需要开启开发者模式 
-
+# 使用说明 Instruction  
+双击运行main.py ，启动Arknights-Sora  
+进入需要连续行动的关卡，在开始行动界面点击Start按钮  
+  
+![avatar](image/sample/sample.png)  
+  
+  
+注：  
+1，仅适用于支持adb调试的安卓模拟器  
+2，adb连接手机需要开启开发者模式  
+2，若遇到报错ConnectionAbortedError，请重启脚本。暂时不清楚原因  
 
 # 版本记录 Version Logs
-## 2021/03/14 v1.0.1
-修复若干bug
-1，新增识别理智液图片添加判断：清空理智液后停止脚本
-当输入的理智液数量大于实际数量，会在“点击开始行动”和“取消使用源石”之间循环
-以免引起不必要的恐慌
-2，bug修复：设置预定行动次数概率不生效
-调整判断满足行动次数逻辑的代码位置
+## 2021/05/26 v1.0.3  
+新增 清空理智后自动领取每日、访问基建领取线索
+
+## 2021/05/9 v1.0.2  
+新增  
+1，脚本结束后，windows任务栏图标提示  
+计划增加：   
+2，增加图片识别：代理指挥、代理指挥失败  
+~~3，刷完理智自动领取每日奖励~~  
+4，ocr识别公招  
+  
+## 2021/03/14 v1.0.1  
+修复若干bug  
+1，新增识别理智液图片添加判断：清空理智液后停止脚本  
+当输入的理智液数量大于实际数量，会在“点击开始行动”和“取消使用源石”之间循环  
+引起不必要的恐慌  
+2，bug修复：设置预定行动次数概率不生效  
+调整判断满足行动次数逻辑的代码位置  
+
+

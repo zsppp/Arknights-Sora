@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>387</width>
-    <height>176</height>
+    <width>480</width>
+    <height>157</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Arknights-Sora - zsppp</string>
+   <string>Arknights-Sora</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QWidget" name="formLayoutWidget">
@@ -19,8 +19,8 @@
      <rect>
       <x>10</x>
       <y>0</y>
-      <width>371</width>
-      <height>121</height>
+      <width>461</width>
+      <height>131</height>
      </rect>
     </property>
     <layout class="QFormLayout" name="LAYOUT_MAINWINDOW">
@@ -29,21 +29,12 @@
        <item>
         <layout class="QHBoxLayout" name="LAYOUT_INFO_BATTLECOUNT">
          <item>
-          <widget class="QCheckBox" name="CB_BATTLECOUNT">
+          <widget class="QLabel" name="LABEL_BATTLECOUNT">
            <property name="statusTip">
-            <string>完成数次行动后终止</string>
+            <string>输入大于0的值可设置行动次数（默认值0为无限次）</string>
            </property>
            <property name="text">
-            <string>预定行动次数</string>
-           </property>
-           <property name="checkable">
-            <bool>true</bool>
-           </property>
-           <property name="checked">
-            <bool>false</bool>
-           </property>
-           <property name="tristate">
-            <bool>false</bool>
+            <string>行动次数</string>
            </property>
           </widget>
          </item>
@@ -53,7 +44,7 @@
             <bool>true</bool>
            </property>
            <property name="statusTip">
-            <string>预定行动次数</string>
+            <string>输入大于0的值可设置行动次数（默认值0为无限次）</string>
            </property>
            <property name="value">
             <number>0</number>
@@ -65,9 +56,9 @@
        <item>
         <layout class="QHBoxLayout" name="LAYOUT_INFO_SANITYCOUNT">
          <item>
-          <widget class="QLabel" name="label">
+          <widget class="QLabel" name="LABEL_SANITYCOUNT">
            <property name="statusTip">
-            <string>不足以行动时，补充理智</string>
+            <string>不足以行动时，消耗理智液</string>
            </property>
            <property name="text">
             <string>理智液数量</string>
@@ -109,10 +100,10 @@
        <item>
         <widget class="QPushButton" name="BIN_START">
          <property name="statusTip">
-          <string>在‘’开始行动“界面点击Start按钮</string>
+          <string>清空理智结束后，自动领取每日、访问线索。（注意：确认已开启代理）</string>
          </property>
          <property name="text">
-          <string>Start</string>
+          <string>开始行动</string>
          </property>
         </widget>
        </item>
@@ -125,7 +116,7 @@
           <string>停止脚本</string>
          </property>
          <property name="text">
-          <string>Stop</string>
+          <string>停止</string>
          </property>
         </widget>
        </item>
@@ -135,7 +126,7 @@
           <string>更换安卓设备</string>
          </property>
          <property name="text">
-          <string>ChangeDevice</string>
+          <string>切换设备</string>
          </property>
         </widget>
        </item>
@@ -149,7 +140,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>387</width>
+     <width>480</width>
      <height>26</height>
     </rect>
    </property>

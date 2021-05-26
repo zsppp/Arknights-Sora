@@ -1,108 +1,200 @@
 'Arknights-Sora'
-__author__='zsppp'
-__version__='v1.0.1'
-#python系统基础模块
-import logging,os,sys,threading,time,operator,builtins
-#连接安卓设备，点击等操作
+__author__ = 'zsppp'
+__version__ = 'v1.0.3'
+
+# python系统基础模块
+import logging, os, sys, threading, time, operator
+# 连接安卓设备，点击等操作
 from airtest.core.android.android import Android
-from airtest.core.android.constant import CAP_METHOD,ORI_METHOD,TOUCH_METHOD
-#cv2
+from airtest.core.android.constant import CAP_METHOD, ORI_METHOD, TOUCH_METHOD
+# cv2
 import cv2
 
-(lambda logger:(logger.setLevel(logging.INFO),logger.addHandler((lambda handler:(handler.setFormatter(logging.Formatter('[%(asctime)s][%(levelname)s]<%(name)s> %(message)s','%H:%M:%S')),handler)[-1])(logging.StreamHandler()))))(logging.getLogger('ark'))
-logger=logging.getLogger('ark.Func')
+#adb 日志打印等级
+(lambda logger:(logger.setLevel(logging.INFO),logger)[-1])(logging.getLogger('airtest')).handlers[0].formatter.datefmt='%H:%M:%S'
+#图片识别 日志打印等级
+(lambda logger: (logger.setLevel(logging.INFO), logger.addHandler((lambda handler: (
+handler.setFormatter(logging.Formatter('[%(asctime)s][%(levelname)s]<%(name)s> %(message)s', '%H:%M:%S')), handler)[
+    -1])(logging.StreamHandler()))))(logging.getLogger('arknights'))
+logger = logging.getLogger('arknights.Func')
 
-#用于暂停和退出
-terminateFlag=False
-suspendFlag=False
-def sleep(x,part=.1):
-    timer=time.time()+x-part
+# 用于暂停和退出
+terminateFlag = False
+suspendFlag = False
+
+
+def sleep(x, part=.1):
+    timer = time.time() + x - part
     while True:
-        while suspendFlag and not terminateFlag:time.sleep(.5)
-        if terminateFlag:builtins.exit(0)
-        if time.time()>=timer:break
+        while suspendFlag and not terminateFlag:
+            time.sleep(.5)
+        if terminateFlag:
+            sys.exit(0)
+        if time.time() >= timer:
+            break
         time.sleep(part)
-    time.sleep(max(0,timer+part-time.time()))
+    time.sleep(max(0, timer + part - time.time()))
+
 
 class Base(Android):
-    def __init__(self,serialno=None):
-        self.lock=threading.Lock()
+    def __init__(self, serialno=None):
+        self.lock = threading.Lock()
         if serialno is None:
-            self.serialno=None
+            self.serialno = None
             return
-        try:super().__init__(serialno,cap_method=CAP_METHOD.JAVACAP,ori_method=ORI_METHOD.ADB,touch_method=TOUCH_METHOD.MAXTOUCH)
-        except:self.serialno=None
+        try:
+            super().__init__(serialno, cap_method=CAP_METHOD.JAVACAP, ori_method=ORI_METHOD.ADB,
+                             touch_method=TOUCH_METHOD.MAXTOUCH)
+        except:
+            self.serialno = None
         else:
-            self.render=[round(i)for i in self.get_render_resolution(True)]
-            self.scale,self.border=(1080/self.render[3],(round(self.render[2]-self.render[3]*16/9)>>1,0))if self.render[2]*9>self.render[3]*16 else(1920/self.render[2],(0,round(self.render[3]-self.render[2]*9/16)>>1))
+            self.render = [round(i) for i in self.get_render_resolution(True)]
+            self.scale, self.border = (
+                1080 / self.render[3],
+                (round(self.render[2] - self.render[3] * 16 / 9) >> 1, 0)) \
+                if self.render[2] * 9 > self.render[3] * 16 else \
+                (1920 / self.render[2], (0, round(self.render[3] - self.render[2] * 9 / 16) >> 1))
             self.maxtouch.install_and_setup()
-            self.key={c:[round(p[i]/self.scale+self.border[i]+self.render[i])for i in range(2)]for c,p in{
-                ' ':(1846,1030),#右下角
-                'B':(1650,750),#开始战斗
-                'Y':(1634,866),#喝理智液
-                }.items()}
-    def press(self,c):
-        logger.debug(f'press {c}')
-        with self.lock:super().touch(self.key[c])
-    def snapshot(self):return cv2.resize(super().snapshot()[self.render[1]+self.border[1]:self.render[1]+self.render[3]-self.border[1],self.render[0]+self.border[0]:self.render[0]+self.render[2]-self.border[0]],(1920,1080),interpolation=cv2.INTER_CUBIC)
-base=Base()
+            self.key = {
+                c: [round(p[i] / self.scale + self.border[i] + self.render[i]) for i in range(2)] for c, p in {
+                    ' ': (1846, 1030),  # 界面右下角
+                    'B': (1650, 750),  # 开始战斗
+                    'Y': (1634, 866),  # 喝理智液
+                    'H': (410, 55), # 菜单
+                    'M': (1630, 55), # 菜单-任务
+                    'W': (1450, 55), # 菜单-任务-周常
+                    'C': (1600, 200), # 菜单-任务-点击领取
+                    'F': (1800, 55), # 菜单-好友
+                    'L': (180, 340), # 菜单-好友列表
+                    'I': (1500, 250), # 菜单-访问基建
+                    'N': (1750, 950), # 菜单-基建访问下位
 
-#载入识别图片
-IMG_BATTLEPREPARE=cv2.imread('image/battleprepare.png')
-IMG_BATTLEBEGIN=cv2.imread('image/battlebegin.png')
-IMG_BATTLECONTINUE=cv2.imread('image/battlecontinue.png')
-IMG_SANITYEMPTY=cv2.imread('image/sanityempty.png')
-IMG_SANITYDRUG=cv2.imread('image/sanitydrug.png')
-check=None
+                }.items()}
+
+    def press(self, c):
+        logger.debug(f'press {c}')
+        with self.lock:
+            super().touch(self.key[c])
+            
+    def perform(self,pos,wait):
+        [(self.press(i),sleep(j*.001))for i,j in zip(pos,wait)]
+
+    def snapshot(self):
+        return cv2.resize(
+            super().snapshot()[
+                self.render[1] + self.border[1]:self.render[1] + self.render[3] - self.border[1],
+                self.render[0] + self.border[0]:self.render[0] + self.render[2] - self.border[0]
+            ], (1920, 1080),
+            interpolation=cv2.INTER_CUBIC)
+
+
+base = Base()
+
+# 载入识别图片
+IMG_HOME = cv2.imread('image/home.png')
+IMG_FRIENDLIST = cv2.imread('image/friendlist.png')
+IMG_CLICKTOCOLLECT = cv2.imread('image/clicktocollect.png')
+IMG_CLICKTOCOMMUNICATION = cv2.imread('image/clicktocommunication.png')
+IMG_COLLECTCLEAN = cv2.imread('image/collectclean.png')
+IMG_BATTLEPREPARE = cv2.imread('image/battleprepare.png')
+IMG_BATTLEBEGIN = cv2.imread('image/battlebegin.png')
+IMG_BATTLECONTINUE = cv2.imread('image/battlecontinue.png')
+IMG_COMMANDER = cv2.imread('image/commander.png')
+IMG_SANITYEMPTY = cv2.imread('image/sanityempty.png')
+IMG_SANITYDRUG = cv2.imread('image/sanitydrug.png')
+check = None
+
+
 class Check:
-    def __init__(self,forwordLagency=.01,backwordLagency=0):
+    def __init__(self, forwordLagency=.01, backwordLagency=0):
         sleep(forwordLagency)
-        self.im=base.snapshot()
+        self.im = base.snapshot()
         global check
-        check=self
+        check = self
         sleep(backwordLagency)
+
     def show(self):
-        cv2.imshow('Check Screenshot - Press S to save',cv2.resize(self.im,(0,0),fx=.4,fy=.4))
-        if cv2.waitKey()==ord('s'):self.save()
+        cv2.imshow('Check Screenshot - Press S to save', cv2.resize(self.im, (0, 0), fx=.4, fy=.4))
+        if cv2.waitKey() == ord('s'):
+            self.save()
         cv2.destroyAllWindows()
         return self
-    def compare(self,img,imgname,rect=(0,0,1920,1080),threshold=.1):
-        value=cv2.minMaxLoc(cv2.matchTemplate(self.im[rect[1]:rect[3],rect[0]:rect[2]],img,cv2.TM_SQDIFF_NORMED))[0]
-        if not operator.eq(imgname,"NOT_PRINT"):
-            logger.debug(f'Compare {imgname} {value}')
-        return threshold>value
-    def isBattlePrepare(self):return self.compare(IMG_BATTLEPREPARE,"IMG_BATTLEPREPARE",(1670,960,1850,1010))
-    def isBattleBegin(self):return self.compare(IMG_BATTLEBEGIN,"IMG_BATTLEBEGIN",(1553,701,1758,900))
-    def isBattleContinue(self):return self.compare(IMG_BATTLECONTINUE,"NOT_PRINT",(890,175,1030,225),.2)
-    def isSanityEmpty(self):return self.compare(IMG_SANITYEMPTY,"IMG_SANITYEMPTY",(205,455,340,540),.2)
-    def isSanityDrug(self):return self.compare(IMG_SANITYDRUG,"IMG_SANITYDRUG",(1044,127,1108,184))
 
-def main(battleCount=-1,sanityCount=0):
+    def compare(self, img, imgname, rect=(0, 0, 1920, 1080), threshold=.1):
+        value = cv2.minMaxLoc(cv2.matchTemplate(
+            self.im[rect[1]:rect[3],
+            rect[0]:rect[2]],
+            img,
+            cv2.TM_SQDIFF_NORMED
+        ))[0]
+        if not operator.eq(imgname, "NOT_PRINT"):
+            logger.debug(f'Compare {imgname} {value}')
+        return threshold > value
+
+    def isHome(self):
+        return self.compare(IMG_HOME, "IMG_HOME", (380, 35, 440, 80), .2)
+
+    def isFriendList(self):
+        return self.compare(IMG_FRIENDLIST, "IMG_FRIENDLIST", (1616, 191, 1756, 301), .2)
+
+    def isClickToCollect(self):
+        return self.compare(IMG_CLICKTOCOLLECT, "IMG_CLICKTOCOLLECT", (1500, 190, 1680, 240), .2)
+
+    def isClickToCommunication(self):
+        return self.compare(IMG_CLICKTOCOMMUNICATION, "IMG_CLICKTOCOMMUNICATION", (1631, 869, 1911, 912), .2)
+
+    def isCollectClean(self):
+        return self.compare(IMG_COLLECTCLEAN, "IMG_COLLECTCLEAN", (150, 240, 245, 275), .2)
+
+    def isBattlePrepare(self):
+        return self.compare(IMG_BATTLEPREPARE, "IMG_BATTLEPREPARE", (1670, 960, 1850, 1010))
+
+    def isBattleBegin(self):
+        return self.compare(IMG_BATTLEBEGIN, "IMG_BATTLEBEGIN", (1553, 701, 1758, 900))
+
+    def isBattleContinue(self):
+        return self.compare(IMG_BATTLECONTINUE, "NOT_PRINT", (890, 175, 1030, 225), .2)
+
+    def isActingCommander(self):
+        return self.compare(IMG_COMMANDER, "NOT_PRINT", (680, 935, 920, 1025), .2)
+
+    def isSanityEmpty(self):
+        return self.compare(IMG_SANITYEMPTY, "IMG_SANITYEMPTY", (205, 455, 340, 540), .2)
+
+    def isSanityDrug(self):
+        return self.compare(IMG_SANITYDRUG, "IMG_SANITYDRUG", (1044, 127, 1108, 184))
+
+
+def Battle(battleTotal=-1, sanityTotal=0):
     def drinkSanity():
-        nonlocal sanity,sanityCount
-        if sanity<sanityCount:
+        nonlocal sanityCount, sanityTotal
+        if sanityCount < sanityTotal:
             if check.isSanityDrug():
-                sanity+=1
-                logger.info(f'Drink Sanity {sanity}/{sanityCount}')
+                sanityCount += 1
+                logger.info(f'Drink Sanity {sanityCount}/{sanityTotal}')
                 base.press("Y")
+                #不同显卡渲染画面稍有差异，导致isBattlePrepare图片匹配失败卡住；暂时解决方法：添加多一个判断
                 while True:
-                    if Check(.5,.5).isBattlePrepare():break
+                    if Check(.5, .5).isBattlePrepare() or not check.isSanityDrug():
+                        break
                 return True
             else:
-                logger.info(f'Sanity {sanity}/{sanityCount},lack {sanityCount-sanity}. Sanity Drug is not enough!!!')
+                logger.info(f'Sanity {sanityCount}/{sanityTotal},lack {sanityTotal - sanityCount}. Sanity Drug is not enough!!!')
                 return False
 
-    battleCountInfo='infinite'
-    if battleCount > 0:battleCountInfo=battleCount
-    logger.info('-----arkFunc-----')
-    logger.info(f' Battle Count:{battleCountInfo}, Sanity Count:{sanityCount}')
-    logger.info('-----------------')
-    battle,sanity=0,0
+    battleCountInfo = 'infinite'
+    if battleTotal > 0:
+        battleCountInfo = battleTotal
+    logger.info('------arkFunc------------------------')
+    logger.info(f' Battle Count:{battleCountInfo}, Sanity Count:{sanityTotal}')
+    logger.info('-------------------------------------')
+    battleCount, sanityCount = 0, 0
     while True:
-        #行动前后逻辑
+        # 行动前后逻辑
         while True:
-            Check(.8,.2)
-            if check.isBattleContinue():break
+            Check(.5, .5)
+            if check.isBattleContinue():
+                break
             elif check.isSanityEmpty():
                 if not drinkSanity():
                     logger.info("---Sanity Empty")
@@ -113,25 +205,93 @@ def main(battleCount=-1,sanityCount=0):
             elif check.isBattleBegin():
                 base.press("B")
                 break
-            else:base.press(" ")
+            else:
+                base.press(" ")
             logger.debug(" ")
-        #开始行动
-        battle+=1
-        logger.info(f'---Battle Start {battle}')
-        #持续判断行动进行
+        # 开始行动
+        battleCount += 1
+        logger.info(f'---Battle Start {battleCount}')
+        # 持续判断行动进行
         while True:
-            if Check(.5,.5).isBattleContinue():break
+            Check(.5,.5)
+            if check.isBattleContinue() or check.isActingCommander():
+                break
         logger.info('Battle Continue...')
         while True:
-            if not Check(.5,3).isBattleContinue():break
-        if battleCount>0:
-            logger.info(f'Battle Finished {battle}/{battleCount}')
-            if battle>=battleCount:
+            Check(.5,3)
+            if not (check.isBattleContinue() or check.isActingCommander()):
+                break
+        #战斗结束后的处理
+        if battleTotal > 0:
+            logger.info(f'Battle Finished {battleCount}/{battleTotal}')
+            if battleCount >= battleTotal:
                 logger.info("---Battle Complete")
-                base.press(" ")
+                for i in range(5):
+                    Check(.5,.5)
+                    if check.isHome():
+                        break
+                    base.press(" ")
                 return
-        else:logger.info('Battle Finished')
-        
+        else:
+            logger.info('Battle Finished')
 
-            
+def DailyWork():
+    def judgeUI():
+        if not Check(.5,.5).isHome():
+            base.press(" ")
+            if not Check(1,.1).isHome():
+                return False
+        return True
 
+    def clickToCollect():
+        while True:
+            base.perform("C ",(500,200))
+            Check()
+            if check.isHome() and not check.isClickToCollect():
+                break
+            #报酬已领取
+            if check.isCollectClean():
+                break
+        return
+
+    def clickToCommunication():
+        while True:
+            base.perform("N",(1200,))
+            Check()
+            if check.isHome() and not check.isClickToCommunication():
+                break
+        return
+
+
+    if not judgeUI():
+        logger.error("无法识别当前界面")
+        return
+    logger.info("领取任务奖励...")
+    base.perform("HM",(400,1000))
+    clickToCollect()
+    base.perform("W",(400,))
+    clickToCollect()
+    logger.info("任务领取完毕...")
+
+    if not judgeUI():
+        logger.error("无法识别当前界面")
+        return
+    while True:
+        base.perform("HF",(400,100))
+        if judgeUI():
+            break
+    base.perform("L",(400,))
+    for i in range(3):
+        if Check(0.5,).isFriendList():
+            base.perform("I",(400,))
+            logger.info("访问基建，线索交流...")
+            clickToCommunication()
+            break
+    
+    logger.info("清理结束")
+    return
+
+#测试图片匹配
+def Test():
+    Check(.5,.5).isCollectClean()
+    return

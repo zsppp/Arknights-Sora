@@ -4,5 +4,7 @@
 
 /__pycache__
 /.vs
-/build/main
+/build
+/dist
+/.vscode
 /main.spec
