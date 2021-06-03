@@ -1,6 +1,6 @@
 'Arknights-Sora'
 __author__ = 'zsppp'
-__version__ = 'v1.0.3'
+__version__ = 'v1.0.4'
 
 # python系统基础模块
 import logging, os, sys, threading, time, operator
@@ -79,13 +79,15 @@ class Base(Android):
     def perform(self,pos,wait):
         [(self.press(i),sleep(j*.001))for i,j in zip(pos,wait)]
 
-    def snapshot(self):
+    def snapShot(self):
         return cv2.resize(
             super().snapshot()[
                 self.render[1] + self.border[1]:self.render[1] + self.render[3] - self.border[1],
                 self.render[0] + self.border[0]:self.render[0] + self.render[2] - self.border[0]
             ], (1920, 1080),
             interpolation=cv2.INTER_CUBIC)
+    def adbDisconnect(self):
+        self.adb.disconnect()
 
 
 base = Base()
@@ -108,7 +110,7 @@ check = None
 class Check:
     def __init__(self, forwordLagency=.01, backwordLagency=0):
         sleep(forwordLagency)
-        self.im = base.snapshot()
+        self.im = base.snapShot()
         global check
         check = self
         sleep(backwordLagency)
@@ -131,38 +133,46 @@ class Check:
             logger.debug(f'Compare {imgname} {value}')
         return threshold > value
 
+    def detect(self,img,rect=(0,0,1920,1080),threshold=.05):
+        loc = (cv2.minMaxLoc(cv2.matchTemplate(self.im[rect[1]:rect[3],rect[0]:rect[2]],img,cv2.TM_SQDIFF_NORMED)))
+        logger.debug(f'detect {loc[0]}')
+        return loc[0]<threshold
+
+    def tap(self,img,rect=(0,0,1920,1080),threshold=.05):
+        return(lambda loc:loc[0]<threshold and base.touch(rect[0]+loc[2][0]+(img.shape[1]>>1), rect[1]+loc[2][1]+(img.shape[0]>>1)))(cv2.minMaxLoc(cv2.matchTemplate(self.im[rect[1]:rect[3],rect[0]:rect[2]],img,cv2.TM_SQDIFF_NORMED)))
+
     def isHome(self):
-        return self.compare(IMG_HOME, "IMG_HOME", (380, 35, 440, 80), .2)
+        return self.compare(IMG_HOME, "IMG_HOME", (240, 5, 580, 110), .2)
 
     def isFriendList(self):
-        return self.compare(IMG_FRIENDLIST, "IMG_FRIENDLIST", (1616, 191, 1756, 301), .2)
+        return self.compare(IMG_FRIENDLIST, "IMG_FRIENDLIST", (1600, 180, 1780, 320), .2)
 
     def isClickToCollect(self):
-        return self.compare(IMG_CLICKTOCOLLECT, "IMG_CLICKTOCOLLECT", (1500, 190, 1680, 240), .2)
+        return self.compare(IMG_CLICKTOCOLLECT, "IMG_CLICKTOCOLLECT", (1480, 170, 1700, 260), .2)
 
     def isClickToCommunication(self):
-        return self.compare(IMG_CLICKTOCOMMUNICATION, "IMG_CLICKTOCOMMUNICATION", (1631, 869, 1911, 912), .2)
+        return self.compare(IMG_CLICKTOCOMMUNICATION, "IMG_CLICKTOCOMMUNICATION", (1600, 850, 1940, 940), .2)
 
     def isCollectClean(self):
-        return self.compare(IMG_COLLECTCLEAN, "IMG_COLLECTCLEAN", (150, 240, 245, 275), .2)
+        return self.compare(IMG_COLLECTCLEAN, "IMG_COLLECTCLEAN", (130, 220, 260, 290), .2)
 
     def isBattlePrepare(self):
-        return self.compare(IMG_BATTLEPREPARE, "IMG_BATTLEPREPARE", (1670, 960, 1850, 1010))
+        return self.compare(IMG_BATTLEPREPARE, "IMG_BATTLEPREPARE", (1650, 940, 1870, 1030))
 
     def isBattleBegin(self):
-        return self.compare(IMG_BATTLEBEGIN, "IMG_BATTLEBEGIN", (1553, 701, 1758, 900))
+        return self.compare(IMG_BATTLEBEGIN, "IMG_BATTLEBEGIN", (1530, 680, 1770, 920))
 
     def isBattleContinue(self):
         return self.compare(IMG_BATTLECONTINUE, "NOT_PRINT", (890, 175, 1030, 225), .2)
 
     def isActingCommander(self):
-        return self.compare(IMG_COMMANDER, "NOT_PRINT", (680, 935, 920, 1025), .2)
+        return self.compare(IMG_COMMANDER, "NOT_PRINT", (660, 910, 940, 1040), .2)
 
     def isSanityEmpty(self):
-        return self.compare(IMG_SANITYEMPTY, "IMG_SANITYEMPTY", (205, 455, 340, 540), .2)
+        return self.compare(IMG_SANITYEMPTY, "IMG_SANITYEMPTY", (200, 440, 360, 560), .2)
 
     def isSanityDrug(self):
-        return self.compare(IMG_SANITYDRUG, "IMG_SANITYDRUG", (1044, 127, 1108, 184))
+        return self.compare(IMG_SANITYDRUG, "IMG_SANITYDRUG", (1020, 110, 1120, 200))
 
 
 def Battle(battleTotal=-1, sanityTotal=0):
@@ -293,5 +303,5 @@ def DailyWork():
 
 #测试图片匹配
 def Test():
-    Check(.5,.5).isCollectClean()
+    Check(.5,.5).isHome()
     return

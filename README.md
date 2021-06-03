@@ -1,7 +1,8 @@
 # Arknights-Sora
 > 明日方舟-清空理智py脚本  
 
-本项目参考某位大佬[hgjazhgj](https://github.com/hgjazhgj)的[FGO全自动脚本](https://github.com/hgjazhgj/FGO-py)  
+本项目以学习python语法为初衷而创建，  
+所使用的代码参考某位大佬[hgjazhgj](https://github.com/hgjazhgj)的[FGO全自动脚本](https://github.com/hgjazhgj/FGO-py)  
 
 
 [版本记录](#版本记录-Version-Logs)  
@@ -54,10 +55,18 @@ Gitee项目地址:[https://gitee.com/zsppp/Arknights-Sora/releases](https://gite
 2，若遇到报错ConnectionAbortedError，请重启脚本。暂时不清楚原因  
 
 # 版本记录 Version Logs
+## 2021/06/03 v1.0.4  
+修改bug  
+1，不同设备显示的图片位置可能稍微有点错位，出现匹配不上的问题。  
+调整图片匹配坐标，放宽数值。  
+
+代码调整  
+2，关闭界面自动断开adb连接  
+
 ## 2021/05/26 v1.0.3  
 新增 清空理智后自动领取每日、访问基建领取线索
 
-## 2021/05/9 v1.0.2  
+## 2021/05/09 v1.0.2  
 新增  
 1，脚本结束后，windows任务栏图标提示  
 计划增加：   

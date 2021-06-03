@@ -72,6 +72,7 @@ class MyMainWindow(QMainWindow):
             return
         arkFunc.terminateFlag=True
         if not self.thread._started:self.thread.join()
+        arkFunc.base.adbDisconnect()
     def runMain(self):
         if not arkFunc.base.serialno:return QMessageBox.critical(self,'错误','未连接设备')
         battleCount=-1
