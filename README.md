@@ -55,6 +55,16 @@ Gitee项目地址:[https://gitee.com/zsppp/Arknights-Sora/releases](https://gite
 2，若遇到报错ConnectionAbortedError，请重启脚本。暂时不清楚原因  
 
 # 版本记录 Version Logs
+## 2021/07/03 v1.0.5
+1，bug修改  
+“联锁竞赛-荷谟伊智境”的“开始行动”位置与常规图的稍微有偏差，脚本点击位置不正确
+调整点击“开始行动”坐标
+  
+2，代码调整  
+鹰角终于实装了一键领取，所以重新截取“日常任务”的识别图片  
+
+3，UI新增“Settings-debug”可以打开显示debug调试信息
+
 ## 2021/06/03 v1.0.4  
 修改bug  
 1，不同设备显示的图片位置可能稍微有点错位，出现匹配不上的问题。  
@@ -82,4 +92,6 @@ Gitee项目地址:[https://gitee.com/zsppp/Arknights-Sora/releases](https://gite
 2，bug修复：设置预定行动次数概率不生效  
 调整判断满足行动次数逻辑的代码位置  
 
-
+## 没有完全躺平  
+害怕处于太过平静、安逸的日常，会失去前进的动力  
+总是会为自己的无能而感到悔恨，想学点新东西，想要做点什么来改变自己  

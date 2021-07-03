@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>480</width>
-    <height>157</height>
+    <width>409</width>
+    <height>175</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,8 +19,8 @@
      <rect>
       <x>10</x>
       <y>0</y>
-      <width>461</width>
-      <height>131</height>
+      <width>391</width>
+      <height>121</height>
      </rect>
     </property>
     <layout class="QFormLayout" name="LAYOUT_MAINWINDOW">
@@ -75,6 +75,19 @@
         </layout>
        </item>
        <item>
+        <widget class="QCheckBox" name="CB_CLUB">
+         <property name="statusTip">
+          <string>清空理智结束后，自动领取每日、访问线索。</string>
+         </property>
+         <property name="text">
+          <string>收取线索</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QCheckBox" name="CB_MUSIC">
          <property name="enabled">
           <bool>true</bool>
@@ -100,7 +113,7 @@
        <item>
         <widget class="QPushButton" name="BIN_START">
          <property name="statusTip">
-          <string>清空理智结束后，自动领取每日、访问线索。（注意：确认已开启代理）</string>
+          <string>注意：确认已开启代理</string>
          </property>
          <property name="text">
           <string>开始行动</string>
@@ -140,7 +153,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>480</width>
+     <width>409</width>
      <height>26</height>
     </rect>
    </property>
@@ -156,7 +169,14 @@
     </property>
     <addaction name="MENU_ABOUT_ABOUT"/>
    </widget>
+   <widget class="QMenu" name="menuSettings">
+    <property name="title">
+     <string>Settings</string>
+    </property>
+    <addaction name="MENU_SETTINGS_DEBUG"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuSettings"/>
    <addaction name="menuabout"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -168,6 +188,20 @@
   <action name="MENU_ABOUT_ABOUT">
    <property name="text">
     <string>about</string>
+   </property>
+  </action>
+  <action name="MENU_SETTINGS_DEBUG">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>debug</string>
+   </property>
+   <property name="statusTip">
+    <string>打开debug信息</string>
    </property>
   </action>
  </widget>
@@ -253,6 +287,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>MENU_SETTINGS_DEBUG</sender>
+   <signal>triggered()</signal>
+   <receiver>arkMainWindow</receiver>
+   <slot>setDebug()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>204</x>
+     <y>91</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>pwsHere()</slot>
@@ -262,5 +312,6 @@
   <slot>runMain()</slot>
   <slot>stop()</slot>
   <slot>about()</slot>
+  <slot>setDebug()</slot>
  </slots>
 </ui>
