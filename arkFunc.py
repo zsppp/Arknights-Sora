@@ -1,6 +1,6 @@
 'Arknights-Sora'
 __author__ = 'zsppp'
-__version__ = 'v1.0.5'
+__version__ = 'v1.0.6'
 
 # python系统基础模块
 import logging, os, sys, threading, time, operator
@@ -266,7 +266,7 @@ def Battle(battleTotal=-1, sanityTotal=0):
         else:
             logger.info('Battle Finished')
 
-def DailyWork():
+def DailyWork(clue_en = 0):
     def judgeUI():
         if not Check(.5,.5).isHome():
             base.press(" ")
@@ -308,21 +308,22 @@ def DailyWork():
     logger.info("任务领取完毕...")
 
     #TODO 考虑添加每日只领取一次线索的限制，避免溢出线索浪费
-    if not judgeUI():
-        logger.error("无法识别当前界面")
-        return
-    while True:
-        base.perform("HF",(400,100))
-        if judgeUI():
-            break
-    base.perform("L",(400,))
-    for i in range(3):
-        if Check(0.5,).isFriendList():
-            base.perform("I",(400,))
-            logger.info("访问基建，线索交流...")
-            clickToCommunication()
-            break
-    
+    if clue_en:
+        if not judgeUI():
+            logger.error("无法识别当前界面")
+            return
+        while True:
+            base.perform("HF", (400, 100))
+            if judgeUI():
+                break
+        base.perform("L", (400,))
+        for i in range(3):
+            if Check(0.5,).isFriendList():
+                base.perform("I", (400,))
+                logger.info("访问基建，线索交流...")
+                clickToCommunication()
+                break
+
     logger.info("清理结束")
     return
 

@@ -43,18 +43,40 @@ Gitee项目地址:[https://gitee.com/zsppp/Arknights-Sora/releases](https://gite
 ***
 
 # 使用说明 Instruction  
-双击运行main.py ，启动Arknights-Sora  
+双击运行`main.py`，启动**Arknights-Sora**  
 进入需要连续行动的关卡，在开始行动界面点击Start按钮  
   
 ![avatar](image/sample/sample.png)  
   
   
+# 建议事项 Suggestions  
+
+1. 仅适用于支持adb调试的安卓模拟器，若是通过adb连接安卓手机需要开启开发者模式  
+  
+2. 若脚本运行过程中遇到报错ConnectionAbortedError，请重启脚本。暂时不清楚原因  
+  
+3. 无法连接夜神模拟器  [issue #3](https://github.com/zsppp/Arknights-Sora/issues/3)
+adb client、server 版本不一致会导致连接不上模拟器，且出现报错  
+`adb server version (36) doesn't match this client (40); killing...`  
+解决办法：  
+确保脚本和模拟器使用相同版本的adb  
+脚本adb路径`airtest\core\android\static\adb\windows\adb.exe`  
+夜神模拟器adb路径`bin\nox_adb.exe`  
+可以把 nox_adb.exe 覆盖到 adb.exe，反过来也可以  
+  
+  
+4. 如果出现其它adb连接的问题，试试打开任务管理器干掉 adb.exe 进程，再重新启动脚本  
+  
+  
+
 注：  
-1，仅适用于支持adb调试的安卓模拟器  
-2，adb连接手机需要开启开发者模式  
-2，若遇到报错ConnectionAbortedError，请重启脚本。暂时不清楚原因  
+本人使用的是雷电模拟器4.0.44 ，脚本属于自用自测。  
 
 # 版本记录 Version Logs
+## 2021/08/03 v1.0.6
+`README.md` 增加 [issue #3](https://github.com/zsppp/Arknights-Sora/issues/3) 夜神模拟器adb连接不上的问题的解决办法  
+[issue #2](https://github.com/zsppp/Arknights-Sora/issues/2) 也提到了该问题  
+
 ## 2021/07/03 v1.0.5
 1，bug修改  
 “联锁竞赛-荷谟伊智境”的“开始行动”位置与常规图的稍微有偏差，脚本点击位置不正确

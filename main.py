@@ -1,5 +1,5 @@
 #python系统基础模块
-import logging,os,sys,threading,time
+import logging,os,sys,threading,traceback,time
 #连接安卓设备，点击等操作
 import airtest
 from airtest.core.android.adb import ADB
@@ -61,8 +61,12 @@ class MyMainWindow(QMainWindow):
 
     #获取adb devices
     def getDevice(self):
-        text,ok=(lambda adbList:QInputDialog.getItem(self,'选取设备','在下拉列表中选择一个设备',adbList,adbList.index(arkFunc.base.serialno)if arkFunc.base.serialno and arkFunc.base.serialno in adbList else 0,True,Qt.WindowStaysOnTopHint))([i for i,j in ADB().devices()if j=='device'])
-        if ok and text and text!=arkFunc.base.serialno:arkFunc.base=arkFunc.Base(text)
+        try:
+            text,ok=(lambda adbList:QInputDialog.getItem(self,'选取设备','在下拉列表中选择一个设备',adbList,adbList.index(arkFunc.base.serialno)if arkFunc.base.serialno and arkFunc.base.serialno in adbList else 0,True,Qt.WindowStaysOnTopHint))([i for i,j in ADB().devices()if j=='device'])
+            if ok and text and text!=arkFunc.base.serialno:arkFunc.base=arkFunc.Base(text)
+        except:
+            traceback.print_exc()
+            logger.error('get Device error!')
 
     #TODO 考虑添加配置文件，可保存设置固定的模拟器adb地址端口，提升脚本启动速度
     def adbConnect(self):
@@ -92,13 +96,13 @@ class MyMainWindow(QMainWindow):
                 arkFunc.suspendFlag=False
                 arkFunc.terminateFlag=False
                 arkFunc.Battle(battleCount, self.ui.TXT_SANITYCOUNT.value())
-                if self.ui.CB_CLUB.isChecked() and not arkFunc.terminateFlag: 
-                    arkFunc.DailyWork()
+                arkFunc.DailyWork(self.ui.CB_CLUB.isChecked())
                 #arkFunc.Test()
             finally:
                 self.signalFuncEnd.emit()
         self.thread=threading.Thread(target=f,name='arkFunc')
         self.thread.start()
+
     def stop(self):arkFunc.terminateFlag=True
 
     def setDebug(self):
