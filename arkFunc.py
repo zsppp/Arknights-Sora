@@ -1,9 +1,9 @@
 'Arknights-Sora'
 __author__ = 'zsppp'
-__version__ = 'v1.0.6'
+__version__ = 'v1.0.7'
 
 # python系统基础模块
-import logging, os, sys, threading, time, operator
+import logging, os, sys, threading, time, operator, traceback
 # 连接安卓设备，点击等操作
 from airtest.core.android.android import Android
 from airtest.core.android.adb import ADB
@@ -74,16 +74,14 @@ class Base(Android):
     def press(self, c):
         logger.debug(f'press {c}')
         with self.lock:
-            #尝试在adb连接出错时能够重连，然而并没有用
             '''
             try:
                 super().touch(self.key[c])
-            except:
-                logger.error('Android touch error!')
-                self.adbReconnect()
+            except Exception as err:
+                traceback.print_exc()
+                raise err
             '''
             super().touch(self.key[c])
-
             
     def perform(self,pos,wait):
         [(self.press(i),sleep(j*.001))for i,j in zip(pos,wait)]
@@ -187,7 +185,7 @@ class Check:
         return self.compare(IMG_BATTLECONTINUE, "IMG_BattileContinue", (890, 175, 1030, 225), .2)
 
     def isActingCommander(self):
-        return self.compare(IMG_COMMANDER, "IMG_ActingCommander", (660, 910, 940, 1040), .2)
+        return self.compare(IMG_COMMANDER, "IMG_ActingCommander", (480, 920, 750, 1040), .2)
 
     def isSanityEmpty(self):
         return self.compare(IMG_SANITYEMPTY, "IMG_SANITYEMPTY", (200, 440, 360, 560), .2)

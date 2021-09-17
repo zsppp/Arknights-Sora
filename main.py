@@ -30,7 +30,7 @@ class MyMainWindow(QMainWindow):
         self.ui=Ui_arkMainWindow()
         self.ui.setupUi(self)
         self.setDebug()
-        self.getDevice()
+        #self.getDevice()
         self.thread=threading.Thread()
         self.signalFuncBegin.connect(self.funcBegin)
         self.signalFuncEnd.connect(self.funcEnd)
@@ -62,7 +62,8 @@ class MyMainWindow(QMainWindow):
     #获取adb devices
     def getDevice(self):
         try:
-            text,ok=(lambda adbList:QInputDialog.getItem(self,'选取设备','在下拉列表中选择一个设备',adbList,adbList.index(arkFunc.base.serialno)if arkFunc.base.serialno and arkFunc.base.serialno in adbList else 0,True,Qt.WindowStaysOnTopHint))([i for i,j in ADB().devices()if j=='device'])
+            adbList = [i for i,j in ADB().devices()if j=='device']
+            text,ok=QInputDialog.getItem(self,'选取设备','在下拉列表中选择一个设备',adbList,adbList.index(arkFunc.base.serialno)if arkFunc.base.serialno and arkFunc.base.serialno in adbList else 0,True,Qt.WindowStaysOnTopHint)
             if ok and text and text!=arkFunc.base.serialno:arkFunc.base=arkFunc.Base(text)
         except:
             traceback.print_exc()
@@ -72,6 +73,19 @@ class MyMainWindow(QMainWindow):
     def adbConnect(self):
         text,ok=QInputDialog.getText(self,'连接设备','远程设备地址',text='localhost:5555')
         if ok and text:ADB(text)
+
+    def adbConnect2(self):
+        try:
+            logger.info('启动 airtest ，并尝试 adb 连接')
+            adbList = [i for i,j in ADB().devices()if j=='device']
+            logger.info(f'adb connect {adbList[0]}')
+            if adbList[0] and adbList[0]!=arkFunc.base.serialno:
+                arkFunc.base=arkFunc.Base(adbList[0])
+                return True
+        except:
+            traceback.print_exc()
+        return False
+
     #检查截图
     def checkCheck(self):arkFunc.Check().show()if arkFunc.base.serialno else QMessageBox.critical(self,'错误','未连接设备')
 
@@ -86,13 +100,15 @@ class MyMainWindow(QMainWindow):
         arkFunc.base.adbDisconnect()
 
     def runMain(self):
-        if not arkFunc.base.serialno:return QMessageBox.critical(self,'错误','未连接设备')
         battleCount=-1
         if self.ui.TXT_BATTLECOUNT.value()>0:
             battleCount=self.ui.TXT_BATTLECOUNT.value()
         def f():
             try:
                 self.signalFuncBegin.emit()
+                if not arkFunc.base.serialno and not self.adbConnect2():
+                    QMessageBox.critical(self,'错误','未连接设备')
+                    return
                 arkFunc.suspendFlag=False
                 arkFunc.terminateFlag=False
                 arkFunc.Battle(battleCount, self.ui.TXT_SANITYCOUNT.value())

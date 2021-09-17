@@ -73,6 +73,10 @@ adb client、server 版本不一致会导致连接不上模拟器，且出现报
 本人使用的是雷电模拟器4.0.44 ，脚本属于自用自测。  
 
 # 版本记录 Version Logs
+## 2021/09/17 v1.0.7
+1，调整“接管作战”图片识别坐标
+2，调整代码逻辑：adb连接放在start之后
+
 ## 2021/08/03 v1.0.6
 `README.md` 增加 [issue #3](https://github.com/zsppp/Arknights-Sora/issues/3) 夜神模拟器adb连接不上的问题的解决办法  
 [issue #2](https://github.com/zsppp/Arknights-Sora/issues/2) 也提到了该问题  
