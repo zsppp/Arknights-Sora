@@ -30,7 +30,7 @@ class MyMainWindow(QMainWindow):
         self.ui=Ui_arkMainWindow()
         self.ui.setupUi(self)
         self.setDebug()
-        #self.getDevice()
+        self.adbConnectEX()
         self.thread=threading.Thread()
         self.signalFuncBegin.connect(self.funcBegin)
         self.signalFuncEnd.connect(self.funcEnd)
@@ -74,7 +74,7 @@ class MyMainWindow(QMainWindow):
         text,ok=QInputDialog.getText(self,'连接设备','远程设备地址',text='localhost:5555')
         if ok and text:ADB(text)
 
-    def adbConnect2(self):
+    def adbConnectEX(self):
         try:
             logger.info('启动 airtest ，并尝试 adb 连接')
             adbList = [i for i,j in ADB().devices()if j=='device']
@@ -106,7 +106,7 @@ class MyMainWindow(QMainWindow):
         def f():
             try:
                 self.signalFuncBegin.emit()
-                if not arkFunc.base.serialno and not self.adbConnect2():
+                if not arkFunc.base.serialno and not self.adbConnectEX():
                     QMessageBox.critical(self,'错误','未连接设备')
                     return
                 arkFunc.suspendFlag=False
