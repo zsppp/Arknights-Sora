@@ -1,9 +1,11 @@
+#!/usr/bin/python3
 'Arknights-Sora'
 __author__ = 'zsppp'
-__version__ = 'v1.0.7'
+__version__ = 'v1.1.0'
 
 # python系统基础模块
-import logging, os, sys, threading, time, operator, traceback
+import logging, sys, threading, time, traceback
+from enum import Enum
 # 连接安卓设备，点击等操作
 from airtest.core.android.android import Android
 from airtest.core.android.adb import ADB
@@ -11,322 +13,325 @@ from airtest.core.android.constant import CAP_METHOD, ORI_METHOD, TOUCH_METHOD
 # cv2
 import cv2
 
-#adb 日志打印等级
+# adb 日志打印等级
 (lambda logger:(logger.setLevel(logging.INFO),logger)[-1])(logging.getLogger('airtest')).handlers[0].formatter.datefmt='%H:%M:%S'
-#图片识别 日志打印等级
-(lambda logger: (logger.setLevel(logging.INFO), logger.addHandler((lambda handler: (
+# 图片识别 日志打印等级
+(lambda logger: (logger.setLevel(logging.DEBUG), logger.addHandler((lambda handler: (
 handler.setFormatter(logging.Formatter('[%(asctime)s][%(levelname)s]<%(name)s> %(message)s', '%H:%M:%S')), handler)[
     -1])(logging.StreamHandler()))))(logging.getLogger('arknights'))
 logger = logging.getLogger('arknights.Func')
 
-# 用于暂停和退出
-terminateFlag = False
-suspendFlag = False
+# 点击坐标枚举 = x, y 坐标
+class Click(Enum):
+    CORNER =                  (1800, 1000)  # 界面右下角（开始行动）
+    DRINK_SANITY =            (1634, 866)  # 喝理智液
+    MENU =                    (410, 55)  # 菜单
+    MENU_TASK =               (1630, 55)  # 菜单-任务
+    MENU_TASK_WEEK =          (1450, 55)  # 菜单-任务-周常
+    MENU_TASK_COLLECT =       (1600, 200)  # 菜单-任务-点击领取
+    MENU_FRIEND =             (1800, 55)  # 菜单-好友
+    MENU_FRIENDLIST =         (180, 340)  # 菜单-好友列表
+    MENU_COMMUNICATION =      (1500, 250)  # 菜单-访问基建
+    MENU_COMMUNICATION_NEXT = (1750, 950)  # 菜单-基建访问下位
 
+# 图片枚举 = （文件路径， 匹配坐标， 匹配阈值（可选，默认0.1））
+class Image(Enum):
+    MENU =                  ('image/menu.png',                  (240, 5, 580, 110), .2)
+    FRIEND_LIST =           ('image/friend_list.png',           (1600, 180, 1780, 320), .2)
+    COMMUNICATION_NEXT =    ('image/communication_next.png',    (1600, 850, 1940, 940), .2)
+    TASK_COLLECT =          ('image/task_collect.png',          (1480, 140, 1900, 280), .2)
+    TASK_CLEAN =            ('image/task_clean.png',            (130, 220, 260, 290), .2)
+    BATTLE_START_1 =        ('image/battle_start_1.png',        (1650, 940, 1870, 1030))
+    BATTLE_START_2 =        ('image/battle_start_2.png',        (1530, 680, 1770, 920))
+    BATTLE_CONTINUE =       ('image/battlecontinue.png',        (480, 920, 750, 1040), .2)
+    SANITY_EMPTY =          ('image/sanity_empty.png',          (200, 440, 360, 560), .2)
+    SANITY_DRUG =           ('image/sanity_drug.png',           (1020, 110, 1120, 200))
+    AGENCY_ERROR =          ('image/agency_error.png',          (500, 650, 800, 800), .2)
+    MISSION_FAILED =        ('image/mission_failed.png',        (150, 400, 650, 650))
+    AGENCY_FLAG =           ('image/agency_flag.png',           (1500, 800, 1900, 950))
 
-def sleep(x, part=.1):
-    timer = time.time() + x - part
-    while True:
-        while suspendFlag and not terminateFlag:
-            time.sleep(.5)
-        if terminateFlag:
-            sys.exit(0)
-        if time.time() >= timer:
-            break
-        time.sleep(part)
-    time.sleep(max(0, timer + part - time.time()))
-
-
-class Base(Android):
+class Base():
     def __init__(self, serialno=None):
+        logger.debug("Base init")
         self.lock = threading.Lock()
-        if serialno is None:
-            self.serialno = None
-            return
+        self.terminate_flag = False
+        self.suspend_flag = False
+        self.serialno = None
+        self.airtest = None
+        if serialno:
+            self.airtest_init(serialno)
+
+    def __del__(self):
+        logger.debug("Base delete")
+        del self.airtest
+
+    def get_devices(self):
         try:
-            super().__init__(serialno, cap_method=CAP_METHOD.JAVACAP, ori_method=ORI_METHOD.ADB,
+            adb_list = [i for i,j in ADB().devices()if j=='device']
+            index = adb_list.index(self.serialno)if self.serialno and self.serialno in adb_list else 0
+            return adb_list, index
+        except:
+            traceback.print_exc()
+            logger.error('Get devices failed!')
+            return [], 0
+
+    def airtest_init(self, serialno=None):
+        if self.airtest:
+            self.airtest_deinit()
+        if serialno is None:
+            adb_list, index = self.get_devices()
+            if len(adb_list) > 0:
+                serialno = adb_list[index]
+            else:
+                logger.error('No devices available!')
+                return
+        logger.info('启动 airtest ，尝试 adb 连接...')
+        logger.info(f'ADB connect {serialno}')
+        try:
+            self.airtest = Android(serialno, cap_method=CAP_METHOD.JAVACAP, ori_method=ORI_METHOD.ADB,
                              touch_method=TOUCH_METHOD.MAXTOUCH)
         except:
             self.serialno = None
+            self.airtest = None
+            raise
+        self.serialno = serialno
+
+        self.render = [round(i) for i in self.airtest.get_render_resolution(True)]
+        if self.render[2] * 9 > self.render[3] * 16:
+            self.scale, self.border = (1080 / self.render[3], (round(self.render[2] - self.render[3] * 16 / 9) >> 1, 0)) 
         else:
-            self.render = [round(i) for i in self.get_render_resolution(True)]
-            self.scale, self.border = (
-                1080 / self.render[3],
-                (round(self.render[2] - self.render[3] * 16 / 9) >> 1, 0)) \
-                if self.render[2] * 9 > self.render[3] * 16 else \
-                (1920 / self.render[2], (0, round(self.render[3] - self.render[2] * 9 / 16) >> 1))
-            self.maxtouch.install_and_setup()
-            self.key = {
-                c: [round(p[i] / self.scale + self.border[i] + self.render[i]) for i in range(2)] for c, p in {
-                    ' ': (1800, 1000),  # 界面右下角（开始行动）
-                    'B': (1650, 750),  # 开始战斗
-                    'Y': (1634, 866),  # 喝理智液
-                    'H': (410, 55), # 菜单
-                    'M': (1630, 55), # 菜单-任务
-                    'W': (1450, 55), # 菜单-任务-周常
-                    'C': (1600, 200), # 菜单-任务-点击领取
-                    'F': (1800, 55), # 菜单-好友
-                    'L': (180, 340), # 菜单-好友列表
-                    'I': (1500, 250), # 菜单-访问基建
-                    'N': (1750, 950), # 菜单-基建访问下位
+            self.scale, self.border = (1920 / self.render[2], (0, round(self.render[3] - self.render[2] * 9 / 16) >> 1))       
+        self.airtest.maxtouch.install_and_setup()
+        # 载入点击信息
+        self.click_map = {i: [round(i.value[j] / self.scale + self.border[j] + self.render[j]) for j in range(2)] for i in Click}
+        # 载入图片信息
+        self.image_map = {i: [cv2.imread(i.value[0]), i.value[1:]] for i in Image}
 
-                }.items()}
-    def press(self, c):
-        logger.debug(f'press {c}')
+    def airtest_deinit(self):
+        del self.airtest
+        self.airtest = None
+        self.serialno = None
+
+
+    def __sleep(self, x, part=.1):
+        timer = time.time() + x - part
+        while True:
+            while self.suspend_flag and not self.terminate_flag:
+                time.sleep(.5)
+            if self.terminate_flag:
+                sys.exit(0)
+            if time.time() >= timer:
+                break
+            time.sleep(part)
+        time.sleep(max(0, timer + part - time.time()))
+
+    def __click_coordinate(self, pos):
+        logger.debug(pos)
         with self.lock:
-            '''
             try:
-                super().touch(self.key[c])
-            except Exception as err:
+                self.airtest.touch(pos)
+            except:
                 traceback.print_exc()
-                raise err
-            '''
-            super().touch(self.key[c])
-            
-    def perform(self,pos,wait):
-        [(self.press(i),sleep(j*.001))for i,j in zip(pos,wait)]
+                logger.info('尝试重新启动airtest...')
+                self.airtest_init(self.serialno)
 
-    def snapShot(self):
-        return cv2.resize(
-            super().snapshot()[
+    def __click(self, key, wait=500):
+        logger.debug(key)
+        self.__click_coordinate(self.click_map[key])
+        self.__sleep(wait*.001)
+
+    def __screen_shot(self, forwordLagency=.5, backwordLagency=.5):
+        self.__sleep(forwordLagency)
+        self.im = cv2.resize(
+            self.airtest.snapshot()[
                 self.render[1] + self.border[1]:self.render[1] + self.render[3] - self.border[1],
-                self.render[0] + self.border[0]:self.render[0] + self.render[2] - self.border[0]
-            ], (1920, 1080),
+                self.render[0] + self.border[0]:self.render[0] + self.render[2] - self.border[0]], 
+            (1920, 1080),
             interpolation=cv2.INTER_CUBIC)
+        self.__sleep(backwordLagency)
+        return True
 
-    def adbDisconnect(self):
-        if self.serialno:
-            self.adb.disconnect()
-    '''
-    def adbReconnect(self):
-        if self.serialno:
-            self.adb.disconnect()
-            del self.adb
-            self.adb = ADB(self.serialno)
-    '''
-base = Base()
-
-# 载入识别图片
-IMG_HOME = cv2.imread('image/home.png')
-IMG_FRIENDLIST = cv2.imread('image/friendlist.png')
-IMG_CLICKTOCOLLECT = cv2.imread('image/clicktocollect.png')
-IMG_CLICKTOCOMMUNICATION = cv2.imread('image/clicktocommunication.png')
-IMG_COLLECTCLEAN = cv2.imread('image/collectclean.png')
-IMG_BATTLEPREPARE = cv2.imread('image/battleprepare.png')
-IMG_BATTLEBEGIN = cv2.imread('image/battlebegin.png')
-IMG_BATTLECONTINUE = cv2.imread('image/battlecontinue.png')
-IMG_COMMANDER = cv2.imread('image/commander.png')
-IMG_SANITYEMPTY = cv2.imread('image/sanityempty.png')
-IMG_SANITYDRUG = cv2.imread('image/sanitydrug.png')
-check = None
-
-
-class Check:
-    def __init__(self, forwordLagency=.01, backwordLagency=0):
-        sleep(forwordLagency)
-        self.im = base.snapShot()
-        global check
-        check = self
-        sleep(backwordLagency)
-
-    def show(self):
-        cv2.imshow('Check Screenshot - Press S to save', cv2.resize(self.im, (0, 0), fx=.4, fy=.4))
-        if cv2.waitKey() == ord('s'):
-            self.save()
-        cv2.destroyAllWindows()
-        return self
-
-    def compare(self, img, imgname, rect=(0, 0, 1920, 1080), threshold=.1):
-        value = cv2.minMaxLoc(cv2.matchTemplate(
+    def __image_compare(self, img_key, click_flag=False):
+        key_value = self.image_map[img_key]
+        img = key_value[0]
+        rect = key_value[1][0]
+        threshold = .1 if len(key_value[1]) <= 1 else key_value[1][1]
+        loc = cv2.minMaxLoc(cv2.matchTemplate(
             self.im[rect[1]:rect[3],
             rect[0]:rect[2]],
             img,
             cv2.TM_SQDIFF_NORMED
-        ))[0]
-        if not operator.eq(imgname, "NOT_PRINT"):
-            logger.debug(f'Compare {imgname} {value}')
+        ))
+        value = loc[0]
+        logger.debug(f'Compare {img_key}, {threshold > value}, value= {value}')
+        if click_flag and threshold > value:
+            self.__click_coordinate((rect[0]+loc[2][0]+(img.shape[1]>>1), rect[1]+loc[2][1]+(img.shape[0]>>1)))
         return threshold > value
 
-    def detect(self,img,rect=(0,0,1920,1080),threshold=.05):
-        loc = (cv2.minMaxLoc(cv2.matchTemplate(self.im[rect[1]:rect[3],rect[0]:rect[2]],img,cv2.TM_SQDIFF_NORMED)))
-        logger.debug(f'detect {loc[0]}')
-        return loc[0]<threshold
+    def __image_click(self, img_key):
+        return self.__image_compare(img_key, True)
 
-    def tap(self,img,rect=(0,0,1920,1080),threshold=.05):
-        return(lambda loc:loc[0]<threshold and base.touch(rect[0]+loc[2][0]+(img.shape[1]>>1), rect[1]+loc[2][1]+(img.shape[0]>>1)))(cv2.minMaxLoc(cv2.matchTemplate(self.im[rect[1]:rect[3],rect[0]:rect[2]],img,cv2.TM_SQDIFF_NORMED)))
-
-    #主页
-    def isHome(self):
-        return self.compare(IMG_HOME, "IMG_Home", (240, 5, 580, 110), .2)
-
-    #查看名片，确定当前界面是好友列表
-    def isFriendList(self):
-        return self.compare(IMG_FRIENDLIST, "IMG_FriendList", (1600, 180, 1780, 320), .2)
-
-    #一键领取
-    def isClickToCollect(self):
-        return self.compare(IMG_CLICKTOCOLLECT, "IMG_ClickToCollect", (1480, 140, 1900, 280), .2)
-
-    #访问基建
-    def isClickToCommunication(self):
-        return self.compare(IMG_CLICKTOCOMMUNICATION, "IMG_ClickToCommunication", (1600, 850, 1940, 940), .2)
-
-    #报酬已领取
-    def isCollectClean(self):
-        return self.compare(IMG_COLLECTCLEAN, "IMG_CollectClean", (130, 220, 260, 290), .2)
-
-    def isBattlePrepare(self):
-        return self.compare(IMG_BATTLEPREPARE, "IMG_BattlePrepare", (1650, 940, 1870, 1030))
-
-    def isBattleBegin(self):
-        return self.compare(IMG_BATTLEBEGIN, "IMG_BattleBegin", (1530, 680, 1770, 920))
-
-    def isBattleContinue(self):
-        return self.compare(IMG_BATTLECONTINUE, "IMG_BattileContinue", (890, 175, 1030, 225), .2)
-
-    def isActingCommander(self):
-        return self.compare(IMG_COMMANDER, "IMG_ActingCommander", (480, 920, 750, 1040), .2)
-
-    def isSanityEmpty(self):
-        return self.compare(IMG_SANITYEMPTY, "IMG_SANITYEMPTY", (200, 440, 360, 560), .2)
-
-    def isSanityDrug(self):
-        return self.compare(IMG_SANITYDRUG, "IMG_SANITYDRUG", (1020, 110, 1120, 200))
-
-
-def Battle(battleTotal=-1, sanityTotal=0):
-    def drinkSanity():
-        nonlocal sanityCount, sanityTotal
-        if sanityCount < sanityTotal:
-            if check.isSanityDrug():
-                sanityCount += 1
-                logger.info(f'Drink Sanity {sanityCount}/{sanityTotal}')
-                base.press("Y")
-                #不同显卡渲染画面稍有差异，导致isBattlePrepare图片匹配失败卡住；暂时解决方法：添加多一个判断
-                while True:
-                    if Check(.5, .5).isBattlePrepare() or not check.isSanityDrug():
-                        break
-                return True
-            else:
-                logger.info(f'Sanity {sanityCount}/{sanityTotal},lack {sanityTotal - sanityCount}. Sanity Drug is not enough!!!')
-                return False
-
-    battleCountInfo = 'infinite'
-    if battleTotal > 0:
-        battleCountInfo = battleTotal
-    logger.info('------arkFunc------------------------')
-    logger.info(f' Battle Count:{battleCountInfo}, Sanity Count:{sanityTotal}')
-    logger.info('-------------------------------------')
-    battleCount, sanityCount = 0, 0
-    while True:
-        # 行动前后逻辑
-        while True:
-            Check(.5, .5)
-            if check.isBattleContinue():
+    def __image_wait(self, img, flag=True, wait=.5):
+        while self.__screen_shot(wait, .5):
+            if self.__image_compare(img) == flag:
                 break
-            elif check.isSanityEmpty():
-                if not drinkSanity():
-                    logger.info("---Sanity Empty")
-                    base.press(" ")
-                    return
-            elif check.isBattlePrepare():
-                base.press(" ")
-            elif check.isBattleBegin():
-                base.press("B")
-                break
-            else:
-                base.press(" ")
-            logger.debug(" ")
-        # 开始行动
-        battleCount += 1
-        logger.info(f'---Battle Start {battleCount}')
-        # 持续判断行动进行
-        while True:
-            Check(.5,.5)
-            if check.isBattleContinue() or check.isActingCommander():
-                break
-        logger.info('Battle Continue...')
-        while True:
-            Check(.5,3)
-            if not (check.isBattleContinue() or check.isActingCommander()):
-                break
-        #战斗结束后的处理
-        if battleTotal > 0:
-            logger.info(f'Battle Finished {battleCount}/{battleTotal}')
-            if battleCount >= battleTotal:
-                logger.info("---Battle Complete")
-                for i in range(5):
-                    Check(.5,.5)
-                    if check.isHome():
-                        break
-                    base.press(" ")
-                return
-        else:
-            logger.info('Battle Finished')
-
-def DailyWork(clue_en = 0):
-    def judgeUI():
-        if not Check(.5,.5).isHome():
-            base.press(" ")
-            if not Check(1,.1).isHome():
-                return False
-        return True
-
-    def clickToCollect():
-        while True:
-            base.perform("C ",(500,200))
-            Check()
-            if not check.isHome():
-                continue
-            if check.isCollectClean():
-                logger.info("报酬已领取")
-                break
-            if not check.isClickToCollect():
-                logger.info("尚有任务未完成")
-                break
-        return
-
-    def clickToCommunication():
-        while True:
-            base.perform("N",(1200,))
-            Check()
-            if check.isHome() and not check.isClickToCommunication():
-                break
-        return
 
 
-    if not judgeUI():
-        logger.error("无法识别当前界面")
-        return
-    logger.info("领取任务奖励...")
-    base.perform("HM",(400,1000))
-    clickToCollect()
-    base.perform("WWWW",(400,400,400,400))
-    clickToCollect()
-    logger.info("任务领取完毕...")
-
-    #TODO 考虑添加每日只领取一次线索的限制，避免溢出线索浪费
-    if clue_en:
-        if not judgeUI():
-            logger.error("无法识别当前界面")
+    # 由此往下的函数都是包含具体操作逻辑
+    # 循环当前关卡，喝药清空理智
+    def action_battle(self, battle_total='infinite', sanity_total=0):
+        if self.airtest is None:
             return
+        if isinstance(battle_total, int) and battle_total <= 0:
+            battle_total = 'infinite'
+        if not isinstance(sanity_total, int):
+            sanity_total = 0
+        battle_count, sanity_count = 0, 0
+        logger.info('---------- arkFunc ------------------------')
+        logger.info(f' Battle Total:{battle_total}, Sanity Total:{sanity_total}')
+        logger.info('-------------------------------------------')
+
+        def ui_level():
+            while True:
+                self.__screen_shot()
+                if self.__image_compare(Image.SANITY_EMPTY):
+                    return False
+                elif self.__image_click(Image.BATTLE_START_1):
+                    continue
+                elif self.__image_click(Image.BATTLE_START_2):
+                    break
+                elif self.__image_compare(Image.BATTLE_CONTINUE):
+                    break
+                else:
+                    logger.error('UI identified error')
+                    return False
+            return True
+        def ui_sanity():
+            nonlocal  sanity_count, sanity_total
+            if sanity_count >= sanity_total:
+                return False
+            if not self.__image_compare(Image.SANITY_EMPTY):
+                logger.error('UI identified error')
+                return False
+            if not self.__image_compare(Image.SANITY_DRUG):
+                logger.info(f'Sanity lack {sanity_total - sanity_count}. Sanity Drug is not enough!!!')
+                return False
+            sanity_count += 1
+            logger.info(f'Drink Sanity {sanity_count}/{sanity_total}')
+            self.__click(Click.DRINK_SANITY, 0)
+            self.__image_wait(Image.SANITY_DRUG, False)
+            return True
+        def ui_battle():
+            self.__image_wait(Image.BATTLE_CONTINUE)
+            logger.info('Battle Continue...')
+            self.__image_wait(Image.BATTLE_CONTINUE, False, 3)
+            self.__screen_shot(.5, .1)
+            if self.__image_compare(Image.MISSION_FAILED):
+                logger.info('行动失败')
+                self.terminate_flag = True
+        def ui_end():
+            while True:
+                self.__screen_shot()
+                if self.__image_compare(Image.AGENCY_ERROR):
+                    logger.info('代理失误')
+                    self.terminate_flag = True
+                if not self.__image_compare(Image.MENU):
+                    self.__click(Click.CORNER, 400)
+                else:
+                    break
+        self.__screen_shot()
+        self.__image_click(Image.AGENCY_FLAG)
+        # 主循环
         while True:
-            base.perform("HF", (400, 100))
-            if judgeUI():
+            if not ui_level():
+                if not ui_sanity():
+                    logger.info("---Sanity Empty")
+                    self.__click(Click.CORNER, 0)
+                    break
+                else:
+                    continue
+            battle_count += 1
+            logger.info(f'---Battle Start--- {battle_count}/{battle_total}')
+            ui_battle()
+            ui_end()
+            if isinstance(battle_total, int) and battle_count >= battle_total:
                 break
-        base.perform("L", (400,))
-        for i in range(3):
-            if Check(0.5,).isFriendList():
-                base.perform("I", (400,))
-                logger.info("访问基建，线索交流...")
-                clickToCommunication()
+        logger.info(f'---Battle Finished--- total={battle_count}, cost time=')
+
+    def action_task_reward(self):
+        def collect():
+            while True:
+                self.__click(Click.MENU_TASK_COLLECT, 500)
+                self.__click(Click.CORNER, 200)
+                self.__screen_shot()
+                if not self.__image_compare(Image.MENU):
+                    continue
+                elif self.__image_compare(Image.TASK_CLEAN):
+                    logger.info("报酬已领取")
+                    break
+                elif not self.__image_compare(Image.TASK_COLLECT):
+                    logger.info("尚有任务未完成")
+                    break
+
+        self.__screen_shot()
+        logger.info("领取任务奖励...")
+        self.__click(Click.MENU, 400)
+        self.__click(Click.MENU_TASK, 1000)
+        collect()
+        self.__click(Click.MENU_TASK_WEEK, 500)
+        collect()
+        logger.info("任务领取完毕...")
+
+    # 访问基建
+    def action_communication(self):
+        if self.airtest is None:
+            return
+        self.__click(Click.CORNER, 500)
+        self.__screen_shot()
+        if not self.__image_compare(Image.MENU):
+            return
+        self.__click(Click.MENU, 500)
+        self.__click(Click.MENU_FRIEND, 200)
+        self.__image_wait(Image.MENU)
+        self.__click(Click.MENU_FRIENDLIST, 400)
+        self.__image_wait(Image.FRIEND_LIST)
+        self.__click(Click.MENU_COMMUNICATION, 400)
+        logger.info("访问基建，线索交流...")
+        while True:
+            self.__click(Click.MENU_COMMUNICATION_NEXT, 1200)
+            self.__screen_shot()
+            if self.__image_compare(Image.MENU) and not self.__image_compare(Image.COMMUNICATION_NEXT):
                 break
+        logger.info("访问基建结束")
+    
+    # TODO
+    def action_infastructure():
+        logger.info("收取基建结束")
 
-    logger.info("清理结束")
-    return
+    # TODO
+    def action_login(self):
+        self.airtest.adb.cmd('shell am start -n com.hypergryph.arknights/com.u8.sdk.U8UnityContext')
+        """
+        while not image.login:
+            click.corner
+        image_click(image.login)
+        """
+        logger.info("登录界面")
+    
+    def action_test(self):
+        self.__screen_shot()
+        self.__image_click(Image.AGENCY_FLAG)
 
-#测试图片匹配
-def Test():
-    Check(.5,.5).isBattleContinue()
-    check.isActingCommander()
-    return
+base = Base()
+
+# sample
+if __name__=='__main__':
+    sanity = 0
+    if len(sys.argv) >= 2:
+        sanity = sys.argv[1]
+
+    base.airtest_init()
+    #base.action_login()
+    base.action_battle(sanity_total=sanity)
+    base.action_communication()
+    base.action_task_reward()
