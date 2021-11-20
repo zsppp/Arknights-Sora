@@ -90,10 +90,10 @@ class MyMainWindow(QMainWindow):
                 self.signalFuncBegin.emit()
                 arkFunc.base.suspend_flag=False
                 arkFunc.base.terminate_flag=False
-                arkFunc.base.action_battle(self.ui.TXT_BATTLECOUNT.value(), self.ui.TXT_SANITYCOUNT.value())
+                arkFunc.action_battle(self.ui.TXT_BATTLECOUNT.value(), self.ui.TXT_SANITYCOUNT.value())
                 if self.ui.CB_CLUB.isChecked():
-                    arkFunc.base.action_communication()
-                arkFunc.base.action_task_reward()
+                    arkFunc.action_communication()
+                arkFunc.action_task_reward()
             finally:
                 self.signalFuncEnd.emit()
         self.thread=threading.Thread(target=f,name='arkFunc')
