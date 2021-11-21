@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 'Arknights-Sora'
 __author__ = 'zsppp'
-__version__ = 'v1.1.2'
+__version__ = 'v1.1.3'
 
 # python系统基础模块
 import logging, sys, threading, time, traceback
@@ -17,7 +17,7 @@ import cv2
 (lambda logger:(logger.setLevel(logging.INFO),logger)[-1])(logging.getLogger('airtest')).handlers[0].formatter.datefmt='%H:%M:%S'
 # 图片识别 日志打印等级
 (lambda logger: (logger.setLevel(logging.DEBUG), logger.addHandler((lambda handler: (
-handler.setFormatter(logging.Formatter('[%(asctime)s][%(levelname)s]<%(name)s> %(message)s', '%H:%M:%S')), handler)[
+handler.setFormatter(logging.Formatter('[%(asctime)s][%(levelname)s]<%(name)s><line %(lineno)s> %(message)s', '%H:%M:%S')), handler)[
     -1])(logging.StreamHandler()))))(logging.getLogger('arknights'))
 logger = logging.getLogger('arknights.Func')
 
@@ -118,6 +118,7 @@ class Base():
         self.serialno = None
     
     def __airtest_restart(self):
+        self.sleep(.1)
         traceback.print_exc()
         logger.info('尝试重新启动airtest...')
         self.airtest_init(self.serialno)
