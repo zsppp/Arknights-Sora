@@ -75,7 +75,7 @@
         </layout>
        </item>
        <item>
-        <widget class="QCheckBox" name="CB_CLUB">
+        <widget class="QCheckBox" name="CB_CLUE">
          <property name="statusTip">
           <string>清空理智结束后，自动领取每日、访问线索。</string>
          </property>

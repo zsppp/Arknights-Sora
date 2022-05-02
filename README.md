@@ -7,7 +7,7 @@
 
 [版本记录](#版本记录-Version-Logs)  
 GitHub项目地址:[https://github.com/zsppp/Arknights-Sora](https://github.com/zsppp/Arknights-Sora)  
-适用于明日方舟简体中文安卓版本,运行在包含Python3.7或更高版本的Windows上  
+适用于明日方舟简体中文安卓版本,运行在包含Python3.7或更高版本的Windows上（Ubuntu也行）  
 
 Gitee平台包含pyinstaller打包的可执行软件包  
 Gitee项目地址:[https://gitee.com/zsppp/Arknights-Sora/releases](https://gitee.com/zsppp/Arknights-Sora/releases)  
@@ -73,7 +73,10 @@ adb client、server 版本不一致会导致连接不上模拟器，且出现报
 本人使用的是雷电模拟器4.0.44 ，脚本属于自用自测。  
 
 # 版本记录 Version Logs
-## 2021/11/22 v1.1.3
+## 2022/05/3 v1.1.5  
+根据新活动UI调整操作逻辑  
+
+## 2021/11/22 v1.1.3  
 修复bug，暂停操作会导致初始化airtest  
 
 ## 2021/11/20 v1.1.2
@@ -128,6 +131,4 @@ adb client、server 版本不一致会导致连接不上模拟器，且出现报
 2，bug修复：设置预定行动次数概率不生效  
 调整判断满足行动次数逻辑的代码位置  
 
-## 没有完全躺平  
-害怕处于太过平静、安逸的日常，会失去前进的动力  
-总是会为自己的无能而感到悔恨，想学点新东西，想要做点什么来改变自己  
+
