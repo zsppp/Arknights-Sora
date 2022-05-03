@@ -301,7 +301,7 @@ def action_battle(battle_total='infinite', sanity_total=0):
             elif base.image_compare(Image.BATTLE_CONTINUE):
                 break
             else:
-                if fail_count > 3:
+                if fail_count > 10:
                     logger.error('UI identified error')
                     return False
                 fail_count += 1
@@ -340,8 +340,8 @@ def action_battle(battle_total='infinite', sanity_total=0):
             if base.image_compare(Image.AGENCY_ERROR):
                 logger.info('代理失误')
                 base.terminate_flag = True
-            if not base.image_compare(Image.MENU):
-                base.click_by_map(Click.MENU, 400)
+            #if not base.image_compare(Image.MENU):
+                #base.click_by_map(Click.MENU, 400)
             else:
                 break
     begin_time = time.perf_counter()
