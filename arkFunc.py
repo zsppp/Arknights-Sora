@@ -388,7 +388,7 @@ def action_task_reward():
                 break
     base.screen_shot()
     logger.info("领取任务奖励...")
-    base.click_by_map(Click.MENU, 400)
+    base.click_by_map(Click.MENU, 800)
     base.click_by_map(Click.MENU_TASK, 1000)
     collect()
     base.click_by_map(Click.MENU_TASK_WEEK, 500)
@@ -399,7 +399,6 @@ def action_task_reward():
 def action_communication():
     if base.airtest is None:
         return
-    base.click_by_map(Click.CORNER, 500)
     base.screen_shot()
     if not base.image_compare(Image.MENU):
         return
@@ -509,20 +508,22 @@ def action_schedule():
             base.image_wait(Image.MENU)
             base.click_by_pos((1405, 265), 100)
             base.click_by_pos((1405, 265), 500)
-
-    """
+   
     schedule_list = [
                         (AP_5, ),
-                        (week_battle, ),
+                        (LS_5, ),
                         (LS_5, ),
                         (AP_5, ),
                         (LS_5, ),
                         (AP_5, ),
                         (AP_5, ),
                     ]
-    [goto_battle(i) for i in schedule_list[w]]
-    """
-    goto_battle(last_battle)
+    # 按照周计划进入不同的材料关卡
+    if False:
+        [goto_battle(i) for i in schedule_list[w]]
+    # 进入上一次作战关卡
+    else:
+        goto_battle(last_battle)
     action_communication()
     action_task_reward()
 
