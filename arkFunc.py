@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 'Arknights-Sora'
 __author__ = 'zsppp'
-__version__ = 'v1.1.5'
+__version__ = 'v1.1.6'
 
 # python系统基础模块
 import logging, sys, threading, time, traceback
@@ -235,7 +235,11 @@ class Base():
         if threshold < value:
             return False
         if click_flag:
-            self.click((rect[0]+loc[2][0]+(img.shape[1]>>1), rect[1]+loc[2][1]+(img.shape[0]>>1)))
+            pos=[round((rect[j]+loc[2][j]+(img.shape[1-j]>>1)) / self.scale + self.border[j] + self.render[j]) for j in range(2)]
+            logger.debug(f'************** {rect[0]} {loc[2][0]} {img.shape[1]>>1}')
+            logger.debug(f'************** {rect[1]} {loc[2][1]} {img.shape[0]>>1}')
+            logger.debug(f'************** {pos}')
+            self.click(pos)
         return True
 
     def image_click(self, img_key, block_flag=False):
